@@ -99,19 +99,6 @@ window.TASKLANE_CONFIG = {
     acceptedResumeTypes: [".pdf", ".doc", ".docx"],
     retentionDays: 180,
     requireResume: false,
-    turnstileSiteKey: "YOUR_CLOUDFLARE_TURNSTILE_SITE_KEY",
-    alternativeAssessmentEmail: "tasklaneco@gmail.com"
-  },
-  assessmentPartner: {
-    enabled: false,
-    merchantApprovedApplicantTraffic: false,
-    name: "FreshBooks",
-    category: "Business management and accounting software",
-    compensatedUrl: "PASTE_MERCHANT_APPROVED_AFFILIATE_LINK_HERE",
-    directUrl: "https://www.freshbooks.com/",
-    noPurchaseRequired: true,
-    disclosure: "Task Lane Company may receive compensation if you choose the partner link. Using it is optional, costs you nothing extra, and has no effect on your application. A direct non-affiliate route is provided beside it.",
-    instruction: "Explore only the free product experience to the extent you are comfortable. Do not enter payment information. You may instead use the direct link or request the equivalent no-account assessment."
-  },
-  postSubmissionResources: []
+    turnstileSiteKey: "YOUR_CLOUDFLARE_TURNSTILE_SITE_KEY"
+  }
 };

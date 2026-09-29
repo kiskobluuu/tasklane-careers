@@ -20,4 +20,4 @@ Use a separate listing for each role and send applicants directly to the matchin
 ## Selection process
 Application → Initial Review → Paid Qualification Evaluation → Final Selection → 3-Month Contract
 
-Never describe the optional affiliate/partner route as a job requirement. No purchase is required and the applicant's link choice must not affect hiring.
+No application fee is required. Applicants should apply only through the official Task Lane careers site.

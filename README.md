@@ -2,13 +2,12 @@
 
 A production-oriented recruiting site designed for GitHub Pages with a private Supabase backend.
 
+The public application is intentionally streamlined to applicant details, experience/availability, and final review. It does not include product reviews, work-sample exercises, affiliate links, or monetized applicant actions.
+
 ## What is included
 - Professional role landing page
-- Five-step application form with browser draft saving
+- Three-step application form with browser draft saving
 - UTM/source capture for job-board attribution
-- Optional, disclosed affiliate/partner assessment module
-- Direct non-affiliate assessment route
-- Applicant privacy, affiliate disclosure and accessibility pages
 - Cloudflare Turnstile anti-bot verification
 - Private Supabase database + private résumé storage
 - Duplicate-submission guard
@@ -19,24 +18,22 @@ A production-oriented recruiting site designed for GitHub Pages with a private S
 ## Important launch gate
 `config.js` ships with `staging: true`. While staging is true, form submission is disabled.
 
-Do **not** set `assessmentPartner.enabled` and `merchantApprovedApplicantTraffic` to true until the merchant has approved this exact traffic source in writing. Applicants are economically motivated by the possibility of employment, so treating job-applicant traffic as ordinary editorial affiliate traffic is risky and may violate an affiliate program's incentive/traffic-quality rules.
 
 ## Launch sequence
-1. Confirm the legal entity name, then configure the remaining service credentials in `config.js` (Supabase, Cloudflare Turnstile, and the merchant-approved affiliate link).
-2. Create a Supabase project dedicated to recruiting data.
-3. Run `backend/supabase/schema.sql` in the Supabase SQL editor.
-4. Deploy `backend/supabase/functions/submit-application` as an Edge Function.
-5. Set Edge Function secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TURNSTILE_SECRET_KEY`, `ALLOWED_ORIGIN`; optionally `RESEND_API_KEY`, `NOTIFY_EMAIL`, `FROM_EMAIL`.
-6. Create a Cloudflare Turnstile widget for the final careers domain and paste its site key into `config.js`.
-7. Test application submission and confirm records/resumés are private.
-8. Replace the privacy-notice effective date and obtain local legal review for your exact hiring jurisdictions.
-9. Set `staging: false`.
-10. Deploy to GitHub Pages and attach the custom domain.
+1. Create a Supabase project dedicated to recruiting data.
+2. Run `backend/supabase/schema.sql` in the Supabase SQL editor.
+3. Deploy `backend/supabase/functions/submit-application` as an Edge Function.
+4. Set Edge Function secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TURNSTILE_SECRET_KEY`, `ALLOWED_ORIGIN`; optionally `RESEND_API_KEY`, `NOTIFY_EMAIL`, `FROM_EMAIL`.
+5. Create a Cloudflare Turnstile widget for the final careers domain and paste its site key into `config.js`.
+6. Test application submission and confirm records/resumés are private.
+7. Replace the privacy-notice effective date and obtain local legal review for your exact hiring jurisdictions.
+8. Set `staging: false`.
+9. Deploy to GitHub Pages and attach the custom domain.
 
 ## Job-board tracking links
 Use a different source query string for each posting, e.g.:
 
-`https://careers.example.com/apply.html?source=indeed&utm_source=indeed&utm_medium=job_board&utm_campaign=role_slug`
+`https://careers.tasklaneco.com/apply.html?source=indeed&utm_source=indeed&utm_medium=job_board&utm_campaign=role_slug`
 
 The form stores these values with the application so you can compare which job board produces qualified applicants.
 

@@ -39,7 +39,7 @@ Deno.serve(async req=>{
     const ip=req.headers.get("cf-connecting-ip")||req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||null;
     if(!(await verifyTurnstile(token,ip))) return json({error:"Verification failed. Please refresh and try again."},400,origin);
 
-    const required=["role_slug","first_name","last_name","email","country","timezone","relevant_experience","role_interest","start_date","weekly_availability","assessment_method","assessment_recommendation","tool_goal","tool_strengths","tool_weakness","tool_improvement","truthfulness","privacy_consent","assessment_acknowledgement"];
+    const required=["role_slug","first_name","last_name","email","country","timezone","relevant_experience","role_interest","start_date","weekly_availability","truthfulness","privacy_consent"];
     for(const k of required) if(!clean(fd.get(k))) return json({error:`Missing required field: ${k}`},400,origin);
     const email=clean(fd.get("email"),160).toLowerCase();
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({error:"Invalid email address."},400,origin);
@@ -60,7 +60,7 @@ Deno.serve(async req=>{
       if(uploadError) throw uploadError;
     }
 
-    const row={id,role_slug:roleSlug,first_name:clean(fd.get("first_name"),80),last_name:clean(fd.get("last_name"),80),email,phone:clean(fd.get("phone"),40)||null,country:clean(fd.get("country"),100),timezone:clean(fd.get("timezone"),50),linkedin_url:clean(fd.get("linkedin_url"),500)||null,portfolio_url:clean(fd.get("portfolio_url"),500)||null,resume_path:resumePath,relevant_experience:clean(fd.get("relevant_experience"),2000),role_interest:clean(fd.get("role_interest"),1500),start_date:clean(fd.get("start_date"),20),weekly_availability:clean(fd.get("weekly_availability"),100),availability_notes:clean(fd.get("availability_notes"),800)||null,assessment_method:clean(fd.get("assessment_method"),1800),assessment_recommendation:clean(fd.get("assessment_recommendation"),1800),tool_goal:clean(fd.get("tool_goal"),1000),tool_strengths:clean(fd.get("tool_strengths"),1200),tool_weakness:clean(fd.get("tool_weakness"),1000),tool_improvement:clean(fd.get("tool_improvement"),1000),source:clean(fd.get("source"),120)||null,utm_source:clean(fd.get("utm_source"),120)||null,utm_medium:clean(fd.get("utm_medium"),120)||null,utm_campaign:clean(fd.get("utm_campaign"),160)||null};
+    const row={id,role_slug:roleSlug,first_name:clean(fd.get("first_name"),80),last_name:clean(fd.get("last_name"),80),email,phone:clean(fd.get("phone"),40)||null,country:clean(fd.get("country"),100),timezone:clean(fd.get("timezone"),50),linkedin_url:clean(fd.get("linkedin_url"),500)||null,portfolio_url:clean(fd.get("portfolio_url"),500)||null,resume_path:resumePath,relevant_experience:clean(fd.get("relevant_experience"),2000),role_interest:clean(fd.get("role_interest"),1500),start_date:clean(fd.get("start_date"),20),weekly_availability:clean(fd.get("weekly_availability"),100),availability_notes:clean(fd.get("availability_notes"),800)||null,source:clean(fd.get("source"),120)||null,utm_source:clean(fd.get("utm_source"),120)||null,utm_medium:clean(fd.get("utm_medium"),120)||null,utm_campaign:clean(fd.get("utm_campaign"),160)||null};
     const {error}=await supabase.from("job_applications").insert(row); if(error) throw error;
 
     if(resendApiKey&&notifyEmail){

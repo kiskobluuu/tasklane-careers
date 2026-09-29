@@ -30,8 +30,4 @@
   document.querySelectorAll("[data-retention-days]").forEach(e=>e.textContent=c.application?.retentionDays||180);
   document.querySelectorAll("[data-privacy-email]").forEach(e=>{const v=c.company?.privacyEmail||"";e.textContent=v;e.href=`mailto:${v}`});
   document.querySelectorAll("[data-careers-email]").forEach(e=>{const v=c.company?.careersEmail||"";e.textContent=v;e.href=`mailto:${v}`});
-  if(document.body.dataset.page==="thankyou"){
-    const resources=(c.postSubmissionResources||[]).filter(x=>x&&x.enabled);
-    if(resources.length){const section=$("#resourceSection"),grid=$("#resourceGrid");section.hidden=false;resources.forEach(r=>{const card=document.createElement("article");card.className="resource-card";const h=document.createElement("h3");h.textContent=r.title;const p=document.createElement("p");p.textContent=r.description;const a=document.createElement("a");a.className="btn btn-secondary";a.textContent=r.cta||"View resource";a.href=r.url;a.target="_blank";a.rel=r.compensated?"sponsored noopener":"noopener";const d=document.createElement("small");d.textContent=r.compensated?(r.disclosure||"Task Lane may receive compensation if you use this link."):"";card.append(h,p,a,d);grid.append(card)})}
-  }
 })();

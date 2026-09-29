@@ -3,4 +3,3 @@ Allow: /
 Disallow: /apply.html
 Disallow: /thank-you.html
 Disallow: /privacy.html
-Disallow: /affiliate-disclosure.html
