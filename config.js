@@ -94,11 +94,11 @@ window.TASKLANE_CONFIG = {
     "3-Month Contract"
   ],
   application: {
-    endpoint: "https://YOUR_SUPABASE_PROJECT.functions.supabase.co/submit-application",
+    endpoint: "https://lvqnwnzuqcxpdryppmpm.supabase.co/functions/v1/submit-application",
     maxResumeMb: 5,
     acceptedResumeTypes: [".pdf", ".doc", ".docx"],
     retentionDays: 180,
     requireResume: false,
-    turnstileSiteKey: "YOUR_CLOUDFLARE_TURNSTILE_SITE_KEY"
+    turnstileSiteKey: ""
   }
 };
