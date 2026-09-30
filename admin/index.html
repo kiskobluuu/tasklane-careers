@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recruitment Dashboard | Task Lane Company</title><meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="../assets/styles.css"><link rel="stylesheet" href="admin.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="admin.js"></script>
+</head><body class="admin-page">
+<header class="admin-header"><a class="admin-brand" href="../index.html"><img src="../assets/tasklane-logo-mark.png" alt=""><span><strong>Task Lane Company</strong><small>Recruitment Administration</small></span></a><button id="signOut" class="secondary-btn" hidden>Sign out</button></header>
+<main class="admin-main">
+<section id="loginPanel" class="login-card">
+<p class="eyebrow">Authorized staff only</p><h1>Recruitment dashboard</h1><p>Sign in with your Task Lane staff account to review applications.</p>
+<form id="loginForm"><label>Email<input id="loginEmail" type="email" autocomplete="username" required></label><label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label><button class="primary-btn" type="submit">Sign in</button><p id="loginStatus" class="admin-status" aria-live="polite"></p></form>
+</section>
+<section id="dashboard" hidden>
+<div class="dashboard-title"><div><p class="eyebrow">Recruitment</p><h1>Applications</h1><p id="staffLabel" class="muted"></p></div><button id="refresh" class="secondary-btn">Refresh</button></div>
+<div class="metrics"><article><span>Total loaded</span><strong id="metricTotal">0</strong></article><article><span>Submitted</span><strong id="metricSubmitted">0</strong></article><article><span>Reviewing</span><strong id="metricReviewing">0</strong></article><article><span>Shortlisted</span><strong id="metricShortlisted">0</strong></article></div>
+<div class="filters"><label>Search<input id="search" type="search" placeholder="Name or email"></label><label>Role<select id="roleFilter"><option value="">All roles</option><option value="research-operations-coordinator">Research Operations Coordinator</option><option value="quality-compliance-specialist">Quality & Compliance Specialist</option><option value="partner-task-operations-manager">Partner & Task Operations Manager</option></select></label><label>Status<select id="statusFilter"><option value="">All statuses</option><option>submitted</option><option>reviewing</option><option>shortlisted</option><option>approved</option><option>rejected</option><option>withdrawn</option></select></label></div>
+<div class="admin-grid">
+<section class="list-panel"><div id="listStatus" class="admin-status" aria-live="polite"></div><div class="table-wrap"><table><thead><tr><th>Applicant</th><th>Role</th><th>Status</th><th>Received</th></tr></thead><tbody id="applicationRows"></tbody></table></div><div class="pagination"><button id="prevPage" class="secondary-btn">Previous</button><span id="pageLabel"></span><button id="nextPage" class="secondary-btn">Next</button></div></section>
+<aside id="detailPanel" class="detail-panel"><div class="empty-detail">Select an application to review it.</div></aside>
+</div></section>
+</main></body></html>
