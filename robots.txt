@@ -2,4 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /apply.html
 Disallow: /thank-you.html
-Disallow: /privacy.html
+Disallow: /admin/
+
+Sitemap: https://careers.tasklaneco.com/sitemap.xml
