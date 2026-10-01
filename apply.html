@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Apply | Task Lane Company</title><meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="assets/styles.css"><script src="config.js"></script><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><script defer src="assets/application.js"></script>
+<link rel="stylesheet" href="assets/styles.css"><script src="config.js"></script><script defer src="assets/application.js"></script>
 </head><body data-page="apply">
 <a class="skip-link" href="#main">Skip to application</a><div id="stagingBanner" class="staging-banner" hidden>STAGING — submissions are disabled until configuration is complete.</div>
 <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><img class="brand-logo" src="assets/tasklane-logo-mark.png" alt=""><span><strong>Task Lane Company</strong><small>Application</small></span></a><a class="text-link" href="index.html">← Back to role</a></div></header>
@@ -17,7 +17,7 @@
 <div class="field-grid two"><label>Country / territory of residence<input required name="country" autocomplete="country-name" maxlength="100"></label><label>Time zone<input required name="timezone" placeholder="e.g. UTC-4" maxlength="50"></label></div>
 <label>LinkedIn profile <span class="optional">(optional)</span><input type="url" name="linkedin_url" placeholder="https://..." maxlength="500"></label>
 <label>Portfolio / professional profile <span class="optional">(optional)</span><input type="url" name="portfolio_url" placeholder="https://..." maxlength="500"></label>
-<label>Résumé/CV <span class="optional">(temporarily unavailable)</span><input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx" disabled><span class="field-help" id="resumeHelp"></span><span class="field-help">Résumé uploads will be enabled after private file storage is configured. You can describe your experience in Step 2.</span></label></section>
+<label>Résumé/CV <span class="optional">(optional)</span><input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx"><span class="field-help" id="resumeHelp"></span><span class="field-help">Your résumé is stored privately and is available only to authorized Task Lane recruitment staff.</span></label></section>
 <section class="form-step" data-step="2"><div class="step-heading"><span class="eyebrow">Step 2 of 3</span><h2>Experience & availability</h2></div>
 <label>Briefly describe the experience most relevant to this role.<textarea required name="relevant_experience" rows="6" maxlength="2000"></textarea></label>
 <label>What interests you about this position?<textarea required name="role_interest" rows="5" maxlength="1500"></textarea></label>
@@ -26,6 +26,6 @@
 <section class="form-step" data-step="3"><div class="step-heading"><span class="eyebrow">Step 3 of 3</span><h2>Review &amp; submit</h2><p>Please confirm your details before submitting your application.</p></div><div id="reviewSummary" class="review-summary"></div>
 <label class="check-row"><input required type="checkbox" name="truthfulness" value="yes"><span>I confirm the information in this application is accurate to the best of my knowledge.</span></label>
 <label class="check-row"><input required type="checkbox" name="privacy_consent" value="yes"><span>I have read the <a href="privacy.html" target="_blank">Applicant Privacy Notice</a> and understand how my application information will be used for recruitment.</span></label>
-<div id="turnstileWrap" class="turnstile-wrap"></div><div class="notice"><strong>Recruitment safety</strong><p>Task Lane Company will never ask you to pay an application fee, send gift cards, deposit a check, or provide banking credentials as a condition of applying.</p></div></section>
+<div id="turnstileWrap" class="turnstile-wrap"><p class="microcopy">This form uses automated abuse controls to protect the application service.</p></div><div class="notice"><strong>Recruitment safety</strong><p>Task Lane Company will never ask you to pay an application fee, send gift cards, deposit a check, or provide banking credentials as a condition of applying.</p></div></section>
 <div class="form-nav"><button type="button" class="btn btn-secondary" id="backButton" hidden>Back</button><button type="button" class="btn btn-primary" id="nextButton">Continue</button><button type="submit" class="btn btn-primary" id="submitButton" hidden>Submit application</button></div><div id="formStatus" class="form-status" role="status" aria-live="polite"></div>
 </form></section></div></main></body></html>
