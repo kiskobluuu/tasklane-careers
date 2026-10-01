@@ -1,71 +1,92 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const allowedOrigin = Deno.env.get("ALLOWED_ORIGIN") || "";
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const turnstileSecret = Deno.env.get("TURNSTILE_SECRET_KEY") || "";
-const notifyEmail = Deno.env.get("NOTIFY_EMAIL") || "";
-const resendApiKey = Deno.env.get("RESEND_API_KEY") || "";
-const fromEmail = Deno.env.get("FROM_EMAIL") || "Task Lane Careers <onboarding@resend.dev>";
-const supabase = createClient(supabaseUrl, serviceRole, {auth:{persistSession:false}});
-
-const cors = (origin:string) => ({
-  "Access-Control-Allow-Origin": origin,
-  "Access-Control-Allow-Headers": "content-type, authorization, x-client-info, apikey",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Vary": "Origin"
-});
-const json = (body:unknown, status=200, origin=allowedOrigin) => new Response(JSON.stringify(body),{status,headers:{...cors(origin),"content-type":"application/json; charset=utf-8"}});
-const clean=(v:FormDataEntryValue|null,max=4000)=>String(v??"").trim().slice(0,max);
-
-async function verifyTurnstile(token:string, ip:string|null){
-  if(!turnstileSecret) return false;
-  const body=new URLSearchParams({secret:turnstileSecret,response:token});
-  if(ip) body.set("remoteip",ip);
-  const r=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",body});
-  const data=await r.json(); return data.success===true;
-}
+const allowedOrigins=new Set(["https://careers.tasklaneco.com","https://kiskobluuu.github.io"]);
+const roles:Record<string,string>={
+ "research-operations-coordinator":"Research Operations Coordinator",
+ "quality-compliance-specialist":"Quality & Compliance Specialist",
+ "partner-task-operations-manager":"Partner & Task Operations Manager"
+};
+const cors=(origin:string|null)=>({"Access-Control-Allow-Origin":origin&&allowedOrigins.has(origin)?origin:"https://careers.tasklaneco.com","Access-Control-Allow-Headers":"content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"});
+const reply=(body:unknown,status:number,origin:string|null)=>new Response(JSON.stringify(body),{status,headers:{...cors(origin),"Content-Type":"application/json","Cache-Control":"no-store"}});
+const clean=(v:unknown,max=4000)=>typeof v==="string"?v.trim().slice(0,max):"";
+const emailOk=(v:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=254;
+const safe=(v:string)=>v.replace(/[<>&"']/g,"");
 
 Deno.serve(async req=>{
-  const origin=req.headers.get("origin")||"";
-  if(req.method==="OPTIONS") return new Response(null,{headers:cors(origin)});
-  if(req.method!=="POST") return json({error:"Method not allowed"},405,origin);
-  if(allowedOrigin && origin!==allowedOrigin) return json({error:"Origin not allowed"},403,origin);
+ const origin=req.headers.get("origin");
+ if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors(origin)});
+ if(req.method!=="POST")return reply({ok:false,error:"Method not allowed"},405,origin);
+ if(origin&&!allowedOrigins.has(origin))return reply({ok:false,error:"Origin not allowed"},403,origin);
 
-  try{
-    const fd=await req.formData();
-    if(clean(fd.get("website"),100)) return json({ok:true},200,origin); // honeypot
-    const token=clean(fd.get("cf-turnstile-response"),4000);
-    const ip=req.headers.get("cf-connecting-ip")||req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||null;
-    if(!(await verifyTurnstile(token,ip))) return json({error:"Verification failed. Please refresh and try again."},400,origin);
+ const contentType=req.headers.get("content-type")||"";
+ let b:any={}; let resume:File|null=null;
+ try{
+   if(contentType.includes("multipart/form-data")){
+     const fd=await req.formData();
+     for(const [k,v] of fd.entries()) if(!(v instanceof File)) b[k]=v;
+     const f=fd.get("resume"); if(f instanceof File&&f.size>0)resume=f;
+     b.consent_privacy=fd.get("privacy_consent")==="yes"||fd.get("consent_privacy")==="true";
+     b.consent_accuracy=fd.get("truthfulness")==="yes"||fd.get("consent_accuracy")==="true";
+     b.full_name=[clean(fd.get("first_name"),80),clean(fd.get("last_name"),80)].filter(Boolean).join(" ");
+     b.experience_summary=clean(fd.get("relevant_experience"),6000);
+     b.relevant_skills=[clean(fd.get("role_interest"),1500),clean(fd.get("linkedin_url"),500),clean(fd.get("portfolio_url"),500)].filter(Boolean).join("\n\n");
+     b.availability_hours=clean(fd.get("weekly_availability"),120);
+     b.available_start_date=clean(fd.get("start_date"),20);
+     b.additional_notes=clean(fd.get("availability_notes"),4000);
+   } else b=await req.json();
+ }catch{return reply({ok:false,error:"Invalid request"},400,origin)}
+ if(clean(b.website,100))return reply({ok:true},200,origin);
 
-    const required=["role_slug","first_name","last_name","email","country","timezone","relevant_experience","role_interest","start_date","weekly_availability","truthfulness","privacy_consent"];
-    for(const k of required) if(!clean(fd.get(k))) return json({error:`Missing required field: ${k}`},400,origin);
-    const email=clean(fd.get("email"),160).toLowerCase();
-    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({error:"Invalid email address."},400,origin);
-    const roleSlug=clean(fd.get("role_slug"),120);
+ const role_slug=clean(b.role_slug,80),role_title=roles[role_slug],full_name=clean(b.full_name,160),email=clean(b.email,254).toLowerCase();
+ if(!role_title||full_name.length<2||!emailOk(email))return reply({ok:false,error:"Please complete the required application fields."},400,origin);
+ if(b.consent_privacy!==true||b.consent_accuracy!==true)return reply({ok:false,error:"Required consent is missing."},400,origin);
 
-    const since=new Date(Date.now()-60*60*1000).toISOString();
-    const {data:dup}=await supabase.from("job_applications").select("id").eq("role_slug",roleSlug).eq("email",email).gte("created_at",since).limit(1);
-    if(dup?.length) return json({error:"An application for this email and role was recently submitted."},409,origin);
+ if(resume){
+   if(resume.size>5*1024*1024)return reply({ok:false,error:"Résumé must be 5 MB or smaller."},400,origin);
+   const ext=(resume.name.split(".").pop()||"").toLowerCase();
+   if(!["pdf","doc","docx"].includes(ext))return reply({ok:false,error:"Résumé must be PDF, DOC or DOCX."},400,origin);
+   const allowedMime=["application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+   if(resume.type&&!allowedMime.includes(resume.type))return reply({ok:false,error:"Résumé file type is not supported."},400,origin);
+ }
 
-    const id=crypto.randomUUID(); let resumePath:null|string=null;
-    const resume=fd.get("resume");
-    if(resume instanceof File && resume.size>0){
-      if(resume.size>5*1024*1024) return json({error:"Résumé must be 5 MB or smaller."},400,origin);
-      const ext=(resume.name.split(".").pop()||"").toLowerCase();
-      if(!["pdf","doc","docx"].includes(ext)) return json({error:"Résumé must be PDF, DOC or DOCX."},400,origin);
-      resumePath=`${roleSlug}/${id}.${ext}`;
-      const {error:uploadError}=await supabase.storage.from("applicant-resumes").upload(resumePath,resume,{contentType:resume.type||"application/octet-stream",upsert:false});
-      if(uploadError) throw uploadError;
-    }
+ const supabase=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+ const ip=req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"";
+ const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(ip+"|tasklane"));
+ const ipHash=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
+ if(ipHash){
+   const since=new Date(Date.now()-60*60*1000).toISOString();
+   const {count}=await supabase.from("applications").select("id",{count:"exact",head:true}).eq("applicant_ip_hash",ipHash).gte("created_at",since);
+   if((count||0)>=10)return reply({ok:false,error:"Too many applications were submitted from this connection. Please try again later."},429,origin);
+ }
 
-    const row={id,role_slug:roleSlug,first_name:clean(fd.get("first_name"),80),last_name:clean(fd.get("last_name"),80),email,phone:clean(fd.get("phone"),40)||null,country:clean(fd.get("country"),100),timezone:clean(fd.get("timezone"),50),linkedin_url:clean(fd.get("linkedin_url"),500)||null,portfolio_url:clean(fd.get("portfolio_url"),500)||null,resume_path:resumePath,relevant_experience:clean(fd.get("relevant_experience"),2000),role_interest:clean(fd.get("role_interest"),1500),start_date:clean(fd.get("start_date"),20),weekly_availability:clean(fd.get("weekly_availability"),100),availability_notes:clean(fd.get("availability_notes"),800)||null,source:clean(fd.get("source"),120)||null,utm_source:clean(fd.get("utm_source"),120)||null,utm_medium:clean(fd.get("utm_medium"),120)||null,utm_campaign:clean(fd.get("utm_campaign"),160)||null};
-    const {error}=await supabase.from("job_applications").insert(row); if(error) throw error;
+ const id=crypto.randomUUID(); let resumePath:string|null=null;
+ if(resume){
+   const ext=(resume.name.split(".").pop()||"").toLowerCase();
+   resumePath=`${role_slug}/${id}.${ext}`;
+   const {error:upErr}=await supabase.storage.from("applicant-resumes").upload(resumePath,resume,{contentType:resume.type||"application/octet-stream",upsert:false});
+   if(upErr){console.error(upErr);return reply({ok:false,error:"We could not securely upload your résumé. Please try again."},500,origin)}
+ }
 
-    if(resendApiKey&&notifyEmail){
-      await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":`Bearer ${resendApiKey}`,"Content-Type":"application/json"},body:JSON.stringify({from:fromEmail,to:[notifyEmail],subject:`New Task Lane application: ${roleSlug}`,text:`A new application was submitted by ${row.first_name} ${row.last_name} (${email}). Review it in Supabase.\n\nDo not forward applicant data unnecessarily.`})}).catch(()=>{});
-    }
-    return json({ok:true,id},201,origin);
-  }catch(err){console.error(err);return json({error:"We could not submit the application. Please try again later."},500,origin)}
+ const row={id,role_slug,role_title,full_name,email,phone:clean(b.phone,80)||null,country:clean(b.country,100)||null,city_region:clean(b.city_region,140)||null,
+ experience_summary:clean(b.experience_summary,6000)||null,relevant_skills:clean(b.relevant_skills,4000)||null,availability_hours:clean(b.availability_hours,120)||null,
+ available_start_date:clean(b.available_start_date,20)||null,timezone:clean(b.timezone,100)||null,additional_notes:clean(b.additional_notes,4000)||null,
+ applicant_ip_hash:ipHash||null,user_agent:clean(req.headers.get("user-agent"),500)||null,consent_privacy:true,consent_accuracy:true,resume_path:resumePath};
+ const {data,error}=await supabase.from("applications").insert(row).select("id").single();
+ if(error){
+   if(resumePath)await supabase.storage.from("applicant-resumes").remove([resumePath]);
+   if(error.code==="23505")return reply({ok:false,error:"An application for this role has already been submitted with this email address."},409,origin);
+   console.error(error);return reply({ok:false,error:"We could not submit your application. Please try again."},500,origin);
+ }
+
+ let mailSuccess=false,providerId:string|null=null,mailError:string|null=null;const resendKey=Deno.env.get("RESEND_API_KEY");
+ if(resendKey)try{
+   const rr=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+resendKey,"Content-Type":"application/json"},body:JSON.stringify({
+     from:"Task Lane Careers <careers@tasklaneco.com>",to:[email],subject:"We received your Task Lane application",
+     html:`<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#1b283e"><img src="https://careers.tasklaneco.com/assets/tasklane-logo-mark.png" width="84" alt="Task Lane Company"><h1>Application received</h1><p>Hi ${safe(full_name)},</p><p>Thank you for applying for <strong>${safe(role_title)}</strong> with Task Lane Company.</p><p>Your application has been received successfully. If it moves forward, we will contact you using this email address.</p><p>— Task Lane Company Careers</p></div>`,
+     text:`Hi ${full_name},\n\nThank you for applying for ${role_title} with Task Lane Company. Your application has been received successfully. If it moves forward, we will contact you using this email address.\n\n— Task Lane Company Careers`
+   })});const j=await rr.json();mailSuccess=rr.ok;providerId=j?.id||null;if(!rr.ok)mailError=JSON.stringify(j).slice(0,1000);
+ }catch(e){mailError=String(e).slice(0,1000)}
+ await supabase.from("email_events").insert({application_id:data.id,kind:"application_received",recipient:email,provider_message_id:providerId,success:mailSuccess,error_message:mailError});
+ return reply({ok:true,application_id:data.id,email_sent:mailSuccess},201,origin);
 });
